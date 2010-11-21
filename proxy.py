@@ -80,9 +80,9 @@ class MinecraftForwarder(asyncore.dispatcher):
         server_connection = socket.socket()
         server_connection.connect(self.forward_to)
 
-        client = MinecraftProxy(client_connection, packets.CLIENT_TO_SERVER,
+        client = MinecraftProxy(client_connection, packets.TO_SERVER,
             self.packet_handler)
-        server = MinecraftProxy(server_connection, packets.SERVER_TO_CLIENT,
+        server = MinecraftProxy(server_connection, packets.TO_CLIENT,
             self.packet_handler)
         server.meet(client)
 

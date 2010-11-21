@@ -8,7 +8,7 @@ from packets.minecraft import *
 from wrapper import MinecraftWrapper, packet_handler
 
 class SimpleMinecraftWrapper(MinecraftWrapper):
-    @packet_handler(ChatMessage, packets.SERVER_TO_CLIENT)
+    @packet_handler(ChatMessage, packets.TO_CLIENT)
     def modify_chat(self, packet):
         """Modifies chat messages to be prefixed with "Name says" in a green
         color, instead of just "<Name>" in white.

@@ -11,11 +11,11 @@ import datamarshal.java
 __author__ = 'andreas@blixt.org (Andreas Blixt)'
 
 __all__ = [
-    'CLIENT_TO_SERVER', 'NotAvailableYet', 'Packet', 'PacketInitializer',
-    'PacketReader', 'PacketToClient', 'PacketToServer', 'SERVER_TO_CLIENT']
+    'NotAvailableYet', 'Packet', 'PacketInitializer', 'PacketReader',
+    'PacketToClient', 'PacketToServer', 'TO_CLIENT', 'TO_SERVER']
 
-CLIENT_TO_SERVER = 0b01
-SERVER_TO_CLIENT = 0b10
+TO_SERVER = 0b01
+TO_CLIENT = 0b10
 
 # Map of packet ids to packet classes, grouped by server->client and
 # client->server directions.
@@ -70,12 +70,12 @@ class Packet(object):
     __metaclass__ = PacketInitializer
 
     def __init__(self, direction=None, **kwargs):
-        if direction == CLIENT_TO_SERVER:
+        if direction == TO_SERVER:
             if not isinstance(self, PacketToServer):
                 raise ValueError(
                     'Packet %s cannot have direction client->server' % (
                         self.__class__.__name__))
-        elif direction == SERVER_TO_CLIENT:
+        elif direction == TO_CLIENT:
             if not isinstance(self, PacketToClient):
                 raise ValueError(
                     'Packet %s cannot have direction server->client' % (
@@ -127,9 +127,9 @@ class NotAvailableYet:
 
 class PacketReader(object):
     def __init__(self, direction):
-        if direction == CLIENT_TO_SERVER:
+        if direction == TO_SERVER:
             self._map = _map_cs
-        elif direction == SERVER_TO_CLIENT:
+        elif direction == TO_CLIENT:
             self._map = _map_sc
         else:
             raise ValueError('Invalid direction')

@@ -14,8 +14,8 @@ __all__ = [
     'NotAvailableYet', 'Packet', 'PacketInitializer', 'PacketReader',
     'PacketToClient', 'PacketToServer', 'TO_CLIENT', 'TO_SERVER']
 
-TO_SERVER = 0b01
 TO_CLIENT = 0b10
+TO_SERVER = 0b01
 
 # Map of packet ids to packet classes, grouped by server->client and
 # client->server directions.

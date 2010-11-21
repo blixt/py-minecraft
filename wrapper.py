@@ -12,7 +12,7 @@ from proxy import MinecraftForwarder
 __author__ = 'andreas@blixt.org (Andreas Blixt)'
 
 __all__ = [
-    'MinecraftWrapperMeta', 'MinecraftWrapper', 'packet_handler']
+    'MinecraftWrapperMeta', 'MinecraftWrapper', 'Player', 'packet_handler']
 
 class MinecraftWrapperMeta(type):
     """Meta-class for setting up packet handlers.
@@ -38,20 +38,36 @@ class MinecraftWrapper(object):
     def __init__(self):
         self.forwarder = MinecraftForwarder(('', 25564), ('localhost', 25565),
             self.handle_packet)
+        self._players = {}
 
-    def handle_packet(self, packet):
+    def handle_packet(self, proxy, packet):
+        # Set up a Player object for every client.
+        key = proxy if packet.direction == packets.TO_SERVER else proxy.other
+        if key not in self._players:
+            self._players[key] = Player()
+        player = self._players[key]
+
+        # Do some special handling of certain packets.
+        if isinstance(packet, packets.minecraft.LogIn):
+            # This is a client logging in.
+            player.username = packet.username
+
         key = (packet.__class__, packet.direction)
         if key not in self._handlers:
             return
 
         for handler in self._handlers[key]:
-            getattr(self, handler)(packet)
+            getattr(self, handler)(player, packet)
 
     def start(self):
         try:
             asyncore.loop()
         except KeyboardInterrupt:
             self.forwarder.handle_close()
+
+class Player(object):
+    def __init__(self):
+        self.username = 'Unknown'
 
 def packet_handler(packet_type, direction):
     key = (packet_type, direction)

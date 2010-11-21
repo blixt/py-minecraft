@@ -49,7 +49,7 @@ class MinecraftProxy(asyncore.dispatcher):
         while len(self.packets) > 0:
             packet = self.packets.pop(0)
             if self.packet_handler:
-                self.packet_handler(packet)
+                self.packet_handler(self, packet)
             data.append(packet.build())
         self.send(''.join(data))
 

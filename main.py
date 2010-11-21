@@ -14,7 +14,7 @@ class SimpleMinecraftWrapper(MinecraftWrapper):
         color, instead of just "<Name>" in white.
 
         """
-        packet.message = re.sub(r'<([^>]+)>', u'§a\\1 says§f', packet.message)
+        packet.message = re.sub(r'^<([^>]+)>', u'§a\\1 says§f', packet.message)
 
 def main():
     wrapper = SimpleMinecraftWrapper()

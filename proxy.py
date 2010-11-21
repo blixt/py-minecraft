@@ -25,9 +25,15 @@ class MinecraftProxy(asyncore.dispatcher):
 
         asyncore.dispatcher.__init__(self, socket)
 
-    def meet(self, other):
-        self.other = other
-        other.other = self
+    def handle_close(self):
+        if not self.other:
+            return
+
+        self.other.close()
+        self.close()
+        self.other = None
+
+        print 'Connection closed'
 
     def handle_error(self):
         print 'Error:', sys.exc_info()
@@ -47,16 +53,12 @@ class MinecraftProxy(asyncore.dispatcher):
             data.append(packet.build())
         self.send(''.join(data))
 
+    def meet(self, other):
+        self.other = other
+        other.other = self
+
     def writable(self):
         return len(self.packets) > 0
-
-    def handle_close(self):
-        if not self.other:
-            return
-        print 'Connection closed'
-        self.other.close()
-        self.close()
-        self.other = None
 
 class MinecraftForwarder(asyncore.dispatcher):
     def __init__(self, listen, forward_to, packet_handler=None):
@@ -68,6 +70,8 @@ class MinecraftForwarder(asyncore.dispatcher):
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.bind(listen)
         self.listen(5)
+
+        print 'Listening on %s' % (listen,)
 
     def handle_accept(self):
         client_connection, source_addr = self.accept()
@@ -81,3 +85,7 @@ class MinecraftForwarder(asyncore.dispatcher):
         server = MinecraftProxy(server_connection, packets.SERVER_TO_CLIENT,
             self.packet_handler)
         server.meet(client)
+
+    def handle_close(self):
+        self.close()
+        print 'Stopped listening'

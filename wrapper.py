@@ -48,7 +48,10 @@ class MinecraftWrapper(object):
             getattr(self, handler)(packet)
 
     def start(self):
-        asyncore.loop()
+        try:
+            asyncore.loop()
+        except KeyboardInterrupt:
+            self.forwarder.handle_close()
 
 def packet_handler(packet_type, direction):
     key = (packet_type, direction)

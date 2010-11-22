@@ -65,6 +65,7 @@ class MinecraftWrapper(object):
                     try:
                         self._commands[command](player, packet, *args)
                     except Exception, e:
+                        print e
                         player.message(u'§6An error occurred.')
                     # Don't send handled commands to the server.
                     packet.suppress()
@@ -113,6 +114,9 @@ class MinecraftWrapper(object):
         for attr_name, attr in m.__dict__.items():
             if callable(attr) and hasattr(attr, '_c_aliases'):
                 aliases = attr._c_aliases
+                # Remove aliases so that this method won't be loaded again
+                # unless it's redefined.
+                delattr(attr, '_c_aliases')
                 for alias in aliases:
                     assert alias not in self._commands, 'Command redefinition'
                     self._commands[alias] = attr
@@ -134,6 +138,9 @@ class MinecraftWrapper(object):
         for attr_name, attr in m.__dict__.items():
             if callable(attr) and hasattr(attr, '_p_handler_keys'):
                 keys = attr._p_handler_keys
+                # Remove keys so that this method won't be loaded again unless
+                # it's redefined.
+                delattr(attr, '_p_handler_keys')
                 for key in keys:
                     if key not in self._handlers:
                         self._handlers[key] = []
@@ -187,7 +194,10 @@ def command(*aliases):
 
     """
     def decorator(handler):
-        handler._c_aliases = aliases
+        if hasattr(handler, '_c_aliases'):
+            handler._c_aliases += aliases
+        else:
+            handler._c_aliases = aliases
         print 'Registered command %s' % '/'.join(aliases)
         return handler
     return decorator
@@ -215,7 +225,10 @@ def packet_handler(packet_type, directions=0):
     assert keys, 'Invalid direction'
 
     def decorator(handler):
-        handler._p_handler_keys = keys
+        if hasattr(handler, '_p_handler_keys'):
+            handler._p_handler_keys += keys
+        else:
+            handler._p_handler_keys = keys
         print 'Registered packet handler %s (for %s)' % (
             handler.__name__, packet_type.__name__)
         return handler

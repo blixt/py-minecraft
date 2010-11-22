@@ -17,12 +17,18 @@ __author__ = 'andreas@blixt.org (Andreas Blixt)'
 __all__ = [
     'MinecraftWrapper', 'Player', 'command', 'packet_handler']
 
+def _load_module(module):
+    m = sys.modules.get(module)
+    if m:
+        reload(m)
+    else:
+        __import__(module)
+    return sys.modules[module]
+
 class MinecraftWrapper(object):
     def __init__(self):
         self.forwarder = MinecraftForwarder(('', 25564), ('localhost', 25565),
             self.handle_packet)
-        self._commands = {}
-        self._handlers = {}
         self._players = {}
 
     def handle_packet(self, proxy, packet):
@@ -51,7 +57,11 @@ class MinecraftWrapper(object):
                 args = message[1:].split(' ')
                 command = args.pop(0)
 
-                if command in self._commands:
+                if command == 'reload':
+                    # Special command /reload for reloading handlers.
+                    self.reload()
+                    packet.suppress()
+                elif command in self._commands:
                     try:
                         self._commands[command](player, packet, *args)
                     except Exception, e:
@@ -87,8 +97,19 @@ class MinecraftWrapper(object):
             handler(player, packet)
 
     def load_command_module(self, module):
-        __import__(module)
-        m = sys.modules[module]
+        """Loads a module containing command handler functions. If the module
+        has already been loaded, it will be reloaded.
+
+        Currently only supports one module at a time.
+
+        """
+        print 'Loading command handlers...'
+
+        m = _load_module(module)
+
+        self._commands = {}
+        self._commands_module = module
+
         for attr_name, attr in m.__dict__.items():
             if callable(attr) and hasattr(attr, '_c_aliases'):
                 aliases = attr._c_aliases
@@ -97,8 +118,19 @@ class MinecraftWrapper(object):
                     self._commands[alias] = attr
 
     def load_handler_module(self, module):
-        __import__(module)
-        m = sys.modules[module]
+        """Loads a module containing packet handler functions. If the module
+        has already been loaded, it will be reloaded.
+
+        Currently only supports one module at a time.
+
+        """
+        print 'Loading packet handlers...'
+
+        m = _load_module(module)
+
+        self._handlers = {}
+        self._handlers_module = module
+
         for attr_name, attr in m.__dict__.items():
             if callable(attr) and hasattr(attr, '_p_handler_keys'):
                 keys = attr._p_handler_keys
@@ -106,6 +138,13 @@ class MinecraftWrapper(object):
                     if key not in self._handlers:
                         self._handlers[key] = []
                     self._handlers[key].append(attr)
+
+    def reload(self):
+        """Reloads the command and packet handler modules.
+
+        """
+        self.load_command_module(self._commands_module)
+        self.load_handler_module(self._handlers_module)
 
     def start(self):
         try:
@@ -149,6 +188,7 @@ def command(*aliases):
     """
     def decorator(handler):
         handler._c_aliases = aliases
+        print 'Registered command %s' % '/'.join(aliases)
         return handler
     return decorator
 
@@ -176,5 +216,7 @@ def packet_handler(packet_type, directions=0):
 
     def decorator(handler):
         handler._p_handler_keys = keys
+        print 'Registered packet handler %s (for %s)' % (
+            handler.__name__, packet_type.__name__)
         return handler
     return decorator

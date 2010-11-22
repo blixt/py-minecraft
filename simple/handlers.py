@@ -13,3 +13,7 @@ def modify_chat(player, packet):
 
     """
     packet.message = re.sub(r'^<([^>]+)>', u'§a\\1 says§f', packet.message)
+
+@packet_handler(SetTime, packets.TO_CLIENT)
+def force_day(player, packet):
+    packet.time = 3600

@@ -46,14 +46,28 @@ class MinecraftProxy(asyncore.dispatcher):
 
     def handle_write(self):
         data = []
+
+        # Send all packets in the queue.
+        # XXX: Maybe limit this to a certain number of packets in case all the
+        #      writing is holding up the rest of the thread.
         while len(self.packets) > 0:
+            # Get the next packet to be sent.
             packet = self.packets.pop(0)
+            # Pass the packet to the packet handler.
             if self.packet_handler:
                 self.packet_handler(self, packet)
-            data.append(packet.build())
+            # Forward the packet as long as it has not been suppressed.
+            if not packet.suppressed:
+                data.append(packet.build())
+
+        # Send all the data that should be sent.
         self.send(''.join(data))
 
     def meet(self, other):
+        """Connect this proxy with another. Basically, set up forwarding from a
+        client to a server and vice versa.
+
+        """
         self.other = other
         other.other = self
 

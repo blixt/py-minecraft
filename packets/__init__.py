@@ -84,6 +84,7 @@ class Packet(object):
             raise ValueError('Invalid direction')
 
         self.direction = direction
+        self.suppressed = False
 
         for name in kwargs:
             setattr(self, name, kwargs[name])
@@ -96,6 +97,14 @@ class Packet(object):
             pieces.append(val.bytes_for(self))
 
         return ''.join(pieces)
+
+    def suppress(self):
+        """By calling this method, the packet is marked as being suppressed,
+        which means it will not be sent to the client or server that it would
+        otherwise be forwarded to.
+
+        """
+        self.suppressed = True
 
     def __repr__(self):
         cls = self.__class__

@@ -12,8 +12,8 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-from datamarshal import Array, Marshaler
-from datamarshal.java import *
+from autoproto.marshal import Array, Marshaler
+from autoproto.marshal.java import *
 
 __author__ = 'andreas@blixt.org (Andreas Blixt)'
 

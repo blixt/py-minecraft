@@ -8,9 +8,9 @@ packets.
 import asyncore
 import sys
 
-import packets
-from packets.minecraft import *
-from proxy import MinecraftForwarder
+import autoproto.packet
+from minecraft.packet import *
+from minecraft.proxy import MinecraftForwarder
 
 __author__ = 'andreas@blixt.org (Andreas Blixt)'
 
@@ -34,7 +34,11 @@ class MinecraftWrapper(object):
     def handle_packet(self, proxy, packet):
         # Get the client connection for the current packet (even if the packet
         # was sent by the server).
-        client = proxy if packet.direction == packets.TO_SERVER else proxy.other
+        if packet.direction == autoproto.packet.TO_SERVER:
+            client = proxy
+        else:
+            client = proxy.other
+
         # Set up a Player object for every client.
         if client not in self._players:
             self._players[client] = Player(client)
@@ -48,7 +52,7 @@ class MinecraftWrapper(object):
             # A player has been logged in and now has an entity id.
             player.id = packet.player_id
         elif isinstance(packet, ChatMessage) and \
-                packet.direction == packets.TO_SERVER:
+                packet.direction == autoproto.packet.TO_SERVER:
             message = packet.message
 
             # Only handle messages that start with a slash.
@@ -211,16 +215,16 @@ def packet_handler(packet_type, directions=0):
 
     """
     if not directions:
-        if issubclass(packet_type, packets.PacketToClient):
-            directions |= packets.TO_CLIENT
-        if issubclass(packet_type, packets.PacketToServer):
-            directions |= packets.TO_SERVER
+        if issubclass(packet_type, autoproto.packet.PacketToClient):
+            directions |= autoproto.packet.TO_CLIENT
+        if issubclass(packet_type, autoproto.packet.PacketToServer):
+            directions |= autoproto.packet.TO_SERVER
 
     keys = []
-    if directions & packets.TO_CLIENT:
-        keys.append((packet_type, packets.TO_CLIENT))
-    if directions & packets.TO_SERVER:
-        keys.append((packet_type, packets.TO_SERVER))
+    if directions & autoproto.packet.TO_CLIENT:
+        keys.append((packet_type, autoproto.packet.TO_CLIENT))
+    if directions & autoproto.packet.TO_SERVER:
+        keys.append((packet_type, autoproto.packet.TO_SERVER))
 
     assert keys, 'Invalid direction'
 

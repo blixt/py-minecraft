@@ -4,9 +4,13 @@
 
 """
 
-from packets import PacketToClient, PacketToServer
-from datamarshal.java import *
-from datamarshal.minecraft import *
+from autoproto.marshal.java import *
+from autoproto.packet import Packet, PacketToClient, PacketToServer
+from minecraft.marshal import *
+
+# TODO: Make it simpler to make the id type local to a set of packet types
+#       without having to inherit from yet another class.
+Packet.id_type = JavaUByte
 
 __author__ = 'andreas@blixt.org (Andreas Blixt)'
 

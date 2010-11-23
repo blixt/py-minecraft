@@ -6,7 +6,7 @@
 
 import struct
 
-from datamarshal import Marshaler
+from autoproto.marshal import Marshaler
 
 __author__ = 'andreas@blixt.org (Andreas Blixt)'
 

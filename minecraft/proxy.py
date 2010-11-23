@@ -9,7 +9,8 @@ import asyncore
 import socket
 import sys
 
-import packets
+import autoproto.marshal.java
+import autoproto.packet
 
 __author__ = 'andreas@blixt.org (Andreas Blixt)'
 
@@ -21,7 +22,8 @@ class MinecraftProxy(asyncore.dispatcher):
         self.other = None
         self.packet_handler = packet_handler
         self.packets = []
-        self.reader = packets.PacketReader(direction)
+        self.reader = autoproto.packet.PacketReader(
+            autoproto.marshal.java.JavaUByte, direction)
 
         asyncore.dispatcher.__init__(self, socket)
 
@@ -94,9 +96,9 @@ class MinecraftForwarder(asyncore.dispatcher):
         server_connection = socket.socket()
         server_connection.connect(self.forward_to)
 
-        client = MinecraftProxy(client_connection, packets.TO_SERVER,
+        client = MinecraftProxy(client_connection, autoproto.packet.TO_SERVER,
             self.packet_handler)
-        server = MinecraftProxy(server_connection, packets.TO_CLIENT,
+        server = MinecraftProxy(server_connection, autoproto.packet.TO_CLIENT,
             self.packet_handler)
         server.meet(client)
 

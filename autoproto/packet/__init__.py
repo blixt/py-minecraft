@@ -5,8 +5,7 @@ well as writing a single packet to a Minecraft server.
 
 """
 
-import datamarshal
-import datamarshal.java
+import autoproto.marshal
 
 __author__ = 'andreas@blixt.org (Andreas Blixt)'
 
@@ -36,6 +35,11 @@ class PacketInitializer(type):
             # Nothing to do if the class has no "id" attribute.
             return t
 
+        assert hasattr(t, 'id_type'), \
+            'An id type must be defined on %(class)s. Do this by setting an ' \
+            'id_type class attribute on %(class)s, or a superclass of ' \
+            '%(class)s' % {'class': name}
+
         packet_id = dct['id']
 
         # Keep track of what packet id maps to what class.
@@ -59,7 +63,7 @@ class PacketInitializer(type):
         t._values = []
         for attr_name in dct.keys():
             attr = dct[attr_name]
-            if isinstance(attr, datamarshal.Marshaler):
+            if isinstance(attr, autoproto.marshal.Marshaler):
                 attr._set_up(attr_name)
                 t._values.append(attr)
         t._values.sort(key=lambda v: v._creation_index)
@@ -91,7 +95,7 @@ class Packet(object):
 
     def build(self):
         pieces = []
-        pieces.append(datamarshal.java.JavaUByte.bytes_from(self.id))
+        pieces.append(self.id_type.bytes_from(self.id))
 
         for val in self._values:
             pieces.append(val.bytes_for(self))
@@ -135,7 +139,7 @@ class NotAvailableYet:
     __slots__ = []
 
 class PacketReader(object):
-    def __init__(self, direction):
+    def __init__(self, id_type, direction):
         if direction == TO_SERVER:
             self._map = _map_cs
         elif direction == TO_CLIENT:
@@ -146,6 +150,7 @@ class PacketReader(object):
         self.buffer = ''
         self.consumed = 0
         self.direction = direction
+        self.id_type = id_type
         self._packet = None
 
     def get(self, num):
@@ -192,7 +197,7 @@ class PacketReader(object):
             try:
                 if not self._packet:
                     # Start reading a new packet.
-                    packet_id = datamarshal.java.JavaUByte.read_bytes(self)
+                    packet_id = self.id_type.read_bytes(self)
                     if packet_id not in self._map:
                         raise NotImplementedError(
                             'Unimplemented packet 0x%02x' % packet_id)

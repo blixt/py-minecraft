@@ -81,8 +81,8 @@ class UseEntity(PacketToServer):
     id = 0x07
     actor_id = JavaInt()
     entity_id = JavaInt()
-    # Probably whether the player is punching a mob.
-    unknown = JavaBool()
+    # TODO: Investigate this value further.
+    punching = JavaBool()
 
     def build(self):
         print repr(self)
@@ -267,14 +267,15 @@ class TeleportEntity(PacketToClient):
     yaw = JavaByte()
     pitch = JavaByte()
 
-class Unknown(PacketToClient):
+class KillEntity(PacketToClient):
     id = 0x26
     entity_id = JavaInt()
+    # TODO: Figure out what this means. Has the value 3 most of the time.
     unknown = JavaByte()
 
     def build(self):
         print repr(self)
-        return super(Unknown, self).build()
+        return super(KillEntity, self).build()
 
 class AttachEntity(PacketToClient):
     id = 0x27

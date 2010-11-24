@@ -18,7 +18,10 @@ class JavaBool(Marshaler):
     format = '>b'
 
     def read_value(self, packet, reader):
-        return bool(self.read_bytes(reader))
+        value = self.read_bytes(reader)
+        assert value == 0 or value == 1, \
+            'Tried to read a boolean but got %d' % value
+        return bool(value)
 
 class JavaByte(Marshaler):
     format = '>b'

@@ -15,7 +15,7 @@ Packet.id_type = JavaUByte
 __author__ = 'andreas@blixt.org (Andreas Blixt)'
 
 __all__ = [
-    'AddItem', 'AllocateChunk', 'AnimateArm', 'AttachEntity', 'BlockChange',
+    'AddItem', 'AllocateChunk', 'Animate', 'AttachEntity', 'BlockChange',
     'ChatMessage', 'ChunkData', 'CollectItem', 'ComplexEntity',
     'CreateVehicle', 'DestroyEntity', 'Dig', 'Disconnect', 'DropItem',
     'Entity', 'EntityVelocity', 'Handshake', 'HandshakeResponse', 'KeepAlive',
@@ -79,8 +79,17 @@ class SpawnPosition(PacketToClient):
 
 class UseEntity(PacketToServer):
     id = 0x07
-    player_id = JavaInt()
+    actor_id = JavaInt()
     entity_id = JavaInt()
+    # Probably whether the player is punching a mob.
+    unknown = JavaBool()
+
+class SetHealth(PacketToClient):
+    id = 0x08
+    health = JavaByte()
+
+class Respawn(PacketToClient, PacketToServer):
+    id = 0x09
 
 class PlayerState(PacketToServer):
     id = 0x0A
@@ -143,7 +152,7 @@ class PlaceItem(PacketToServer):
 
 class SetHeldItem(PacketToClient, PacketToServer):
     id = 0x10
-    player_id = JavaInt()
+    entity_id = JavaInt()
     item_id = JavaShort()
 
 class AddItem(PacketToClient):
@@ -152,14 +161,14 @@ class AddItem(PacketToClient):
     count = JavaByte()
     health = JavaShort()
 
-class AnimateArm(PacketToClient, PacketToServer):
+class Animate(PacketToClient, PacketToServer):
     id = 0x12
-    player_id = JavaInt()
-    animate = JavaBool()
+    entity_id = JavaInt()
+    animation = JavaByte()
 
 class SpawnNamedEntity(PacketToClient):
     id = 0x14
-    player_id = JavaInt()
+    entity_id = JavaInt()
     username = JavaString()
     x = JavaInt()
     y = JavaInt()
@@ -170,7 +179,7 @@ class SpawnNamedEntity(PacketToClient):
 
 class DropItem(PacketToClient, PacketToServer):
     id = 0x15
-    player_id = JavaInt()
+    entity_id = JavaInt()
     item_id = JavaShort()
     count = JavaByte()
     x = JavaInt()
@@ -183,7 +192,7 @@ class DropItem(PacketToClient, PacketToServer):
 class CollectItem(PacketToClient):
     id = 0x16
     entity_id = JavaInt()
-    player_id = JavaInt()
+    actor_id = JavaInt()
 
 class CreateVehicle(PacketToClient):
     id = 0x17
@@ -254,9 +263,14 @@ class TeleportEntity(PacketToClient):
     yaw = JavaByte()
     pitch = JavaByte()
 
+class Unknown(PacketToClient):
+    id = 0x26
+    entity_id = JavaInt()
+    unknown = JavaByte()
+
 class AttachEntity(PacketToClient):
     id = 0x27
-    player_id = JavaInt()
+    actor_id = JavaInt()
     entity_id = JavaInt()
 
     DETACH = -1

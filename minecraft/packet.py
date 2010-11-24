@@ -19,12 +19,12 @@ __all__ = [
     'ChatMessage', 'ChunkData', 'CollectItem', 'ComplexEntity',
     'CreateVehicle', 'DestroyEntity', 'Dig', 'Disconnect', 'DropItem',
     'Entity', 'EntityVelocity', 'Handshake', 'HandshakeResponse', 'KeepAlive',
-    'LogIn', 'LoggedIn', 'Look', 'Move', 'MoveAndLook',
+    'KillEntity', 'LogIn', 'LoggedIn', 'Look', 'Move', 'MoveAndLook',
     'MoveAndLookCorrection', 'MoveAndPointEntity', 'MoveEntity',
     'MultiBlockChange', 'PlaceItem', 'PlayerInventory', 'PlayerState',
-    'PointEntity', 'RelativeBlockChange', 'RelativeBlockChangeList',
-    'SetHeldItem', 'SetTime', 'SpawnMob', 'SpawnNamedEntity', 'SpawnPosition',
-    'TeleportEntity', 'UseEntity']
+    'PointEntity', 'RelativeBlockChange', 'RelativeBlockChangeList', 'Respawn',
+    'SetHealth', 'SetHeldItem', 'SetTime', 'SpawnMob', 'SpawnNamedEntity',
+    'SpawnPosition', 'TeleportEntity', 'UseEntity']
 
 class KeepAlive(PacketToClient, PacketToServer):
     id = 0x00

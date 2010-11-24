@@ -84,6 +84,10 @@ class UseEntity(PacketToServer):
     # Probably whether the player is punching a mob.
     unknown = JavaBool()
 
+    def build(self):
+        print repr(self)
+        return super(UseEntity, self).build()
+
 class SetHealth(PacketToClient):
     id = 0x08
     health = JavaByte()
@@ -267,6 +271,10 @@ class Unknown(PacketToClient):
     id = 0x26
     entity_id = JavaInt()
     unknown = JavaByte()
+
+    def build(self):
+        print repr(self)
+        return super(Unknown, self).build()
 
 class AttachEntity(PacketToClient):
     id = 0x27

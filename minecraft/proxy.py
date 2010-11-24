@@ -8,6 +8,7 @@ connection, and the handling of packets in-between.
 import asyncore
 import socket
 import sys
+import traceback
 
 import autoproto.marshal.java
 import autoproto.packet
@@ -38,7 +39,10 @@ class MinecraftProxy(asyncore.dispatcher):
         print 'Connection closed'
 
     def handle_error(self):
-        print 'Error:', sys.exc_info()
+        t, v, tb = sys.exc_info()
+        print 'ERROR: %s' % v
+        traceback.print_tb(tb)
+
         self.handle_close()
 
     def handle_read(self):

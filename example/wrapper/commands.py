@@ -52,6 +52,8 @@ def location(player, packet, *args):
             # Move the player down.
             kwargs['y'] = location.y
             kwargs['stance'] = kwargs['y'] + 1.62
+            # Set the player as "on ground" to prevent fall damage.
+            kwargs['on_ground'] = True
             player.inject(MoveAndLook(**kwargs))
 
             # Tell the client its new position.

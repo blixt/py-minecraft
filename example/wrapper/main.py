@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from minecraft.wrapper import MinecraftWrapper
+from example.wrapper import MinecraftWrapper
 
 def main():
     w = MinecraftWrapper()

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from example.wrapper import command
 from minecraft.packet import *
-from minecraft.wrapper import command
 
 _locations = {}
 

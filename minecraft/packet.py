@@ -315,7 +315,7 @@ class BlockChange(PacketToClient):
     type = JavaByte()
     meta = JavaByte()
 
-class ComplexEntity(PacketToClient):
+class ComplexEntity(PacketToClient, PacketToServer):
     id = 0x3B
     x = JavaInt()
     y = JavaShort()

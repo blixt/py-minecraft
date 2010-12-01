@@ -5,6 +5,8 @@ well as writing a single packet to a Minecraft server.
 
 """
 
+import binascii
+
 import autoproto.marshal
 
 __author__ = 'andreas@blixt.org (Andreas Blixt)'
@@ -199,8 +201,12 @@ class PacketReader(object):
                     # Start reading a new packet.
                     packet_id = self.id_type.read_bytes(self)
                     if packet_id not in self._map:
+                        # Get the remaining bytes to show in error.
+                        data = self.buffer[mark:]
+                        # Raise error.
                         raise NotImplementedError(
-                            'Unimplemented packet 0x%02x' % packet_id)
+                            'Encountered unimplemented packet %r [%s]' % (
+                                packet_id, binascii.hexlify(data)))
                     self._packet = self._map[packet_id](self.direction)
                 packet = self._packet
 

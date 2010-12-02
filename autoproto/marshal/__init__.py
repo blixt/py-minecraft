@@ -106,26 +106,62 @@ class Marshaler(object):
         return value
 
 class Array(Marshaler):
+    def __init__(self, length_type, item_type, **kwargs):
+        """Initializes an array field. The length of the array is determined
+        using length_type. If length_type is a number, that number is used as
+        a fixed length instead. Every item in the array is read/written as
+        item_type.
+
+        """
+        super(Array, self).__init__(**kwargs)
+        self.length_type = length_type
+        self.item_type = item_type
+
     @classmethod
-    def bytes_from(cls, value, item_type, **item_kwargs):
+    def bytes_from(cls, value, length_type, item_type, **item_kwargs):
         """Takes a list and gets the bytes for every item through the item_type
-        class. The item_kwargs argument is a dictionary of keyword arguments to
-        pass on to the bytes_from method of the item_type class.
+        class. The length of the list is witten using length_type. If
+        length_type is a number, no value is written, but the list is checked
+        make sure that it's the length specified by length_type.
+
+        The item_kwargs argument is a dictionary of keyword arguments to pass
+        on to the bytes_from method of the item_type class.
 
         """
         pieces = []
+
+        if isinstance(length_type, (int, long)):
+            assert len(value) == length_type, 'Invalid value length'
+        else:
+            pieces.append(length_type.bytes_from(len(value)))
+
         for item in value:
-            pieces.append(item_type.bytes_from(value, **item_kwargs))
+            pieces.append(item_type.bytes_from(item, **item_kwargs))
         return ''.join(pieces)
 
     @classmethod
-    def read_bytes(cls, reader, item_type, length, **item_kwargs):
-        """Reads a sequence of item_type. The item_kwargs argument is a
-        dictionary of keyword arguments to pass on to the read_bytes method of
-        the item_type class.
+    def read_bytes(cls, reader, length_type, item_type, **item_kwargs):
+        """Reads a sequence of item_type. The length of the sequence is
+        determined by reading a number using length_type. (If length_type is a
+        number, that number will be used.)
+
+        The item_kwargs argument is a dictionary of keyword arguments to pass
+        on to the read_bytes method of the item_type class.
 
         """
+        if isinstance(length_type, (int, long)):
+            length = length_type
+        else:
+            length = length_type.read_bytes(reader)
+
         value = []
         for i in xrange(length):
             value.append(item_type.read_bytes(reader, **item_kwargs))
         return value
+
+    def bytes_for(self, packet):
+        return self.bytes_from(self.value_for(packet), self.length_type,
+                               self.item_type)
+
+    def read_value(self, packet, reader):
+        return self.read_bytes(reader, self.length_type, self.item_type)

@@ -4,6 +4,7 @@
 
 """
 
+from autoproto.marshal import Array
 from autoproto.marshal.java import *
 from autoproto.packet import Packet, PacketToClient, PacketToServer
 from minecraft.marshal import *
@@ -17,14 +18,14 @@ __author__ = 'andreas@blixt.org (Andreas Blixt)'
 __all__ = [
     'AddItem', 'AllocateChunk', 'Animate', 'AttachEntity', 'BlockChange',
     'ChatMessage', 'ChunkData', 'CollectItem', 'ComplexEntity',
-    'CreateVehicle', 'DestroyEntity', 'Dig', 'Disconnect', 'DropItem',
-    'Entity', 'EntityVelocity', 'Handshake', 'HandshakeResponse', 'KeepAlive',
-    'KillEntity', 'LogIn', 'LoggedIn', 'Look', 'Move', 'MoveAndLook',
-    'MoveAndLookCorrection', 'MoveAndPointEntity', 'MoveEntity',
-    'MultiBlockChange', 'PlaceItem', 'PlayerInventory', 'PlayerState',
-    'PointEntity', 'RelativeBlockChange', 'RelativeBlockChangeList', 'Respawn',
-    'SetHealth', 'SetHeldItem', 'SetTime', 'SpawnMob', 'SpawnNamedEntity',
-    'SpawnPosition', 'TeleportEntity', 'UseEntity']
+    'CreateVehicle', 'DamageEntity', 'DestroyEntity', 'Dig', 'Disconnect',
+    'DropItem', 'Entity', 'EntityVelocity', 'Explode', 'Handshake',
+    'HandshakeResponse', 'KeepAlive', 'LogIn', 'LoggedIn', 'Look', 'Move',
+    'MoveAndLook', 'MoveAndLookCorrection', 'MoveAndPointEntity', 'MoveEntity',
+    'MultiBlockChange', 'PlayerInventory', 'PlayerState', 'PointEntity',
+    'RelativeBlockChange', 'RelativeBlockChangeList', 'Respawn', 'SetHealth',
+    'SetHeldItem', 'SetTime', 'SpawnMob', 'SpawnNamedEntity', 'SpawnPosition',
+    'TeleportEntity', 'UseEntity', 'UseItem']
 
 class KeepAlive(PacketToClient, PacketToServer):
     id = 0x00
@@ -78,15 +79,15 @@ class SpawnPosition(PacketToClient):
     z = JavaInt()
 
 class UseEntity(PacketToServer):
+    """This packet is sent when an entity is within a certain range, the player
+    points at it and then left- or right-clicks. The punching flag is True when
+    left-clicking (punching).
+
+    """
     id = 0x07
     actor_id = JavaInt()
     entity_id = JavaInt()
-    # TODO: Investigate this value further.
     punching = JavaBool()
-
-    def build(self):
-        print repr(self)
-        return super(UseEntity, self).build()
 
 class SetHealth(PacketToClient):
     id = 0x08
@@ -146,7 +147,13 @@ class Dig(PacketToServer):
     STOPPED_DIGGING = 2
     BLOCK_BROKEN = 3
 
-class PlaceItem(PacketToServer):
+class UseItem(PacketToServer):
+    """This packet is sent when the currently held item is used. The x, y, z
+    and face values will be -1 if the player was pointing in the air, otherwise
+    they will be the coordinates and face of the block the player was pointing
+    at.
+
+    """
     id = 0x0F
     item_id = JavaShort()
     x = JavaInt()
@@ -169,6 +176,10 @@ class Animate(PacketToClient, PacketToServer):
     id = 0x12
     entity_id = JavaInt()
     animation = JavaByte()
+
+    SWING = 1
+    CROUCH = 104
+    STAND = 105
 
 class SpawnNamedEntity(PacketToClient):
     id = 0x14
@@ -221,6 +232,14 @@ class SpawnMob(PacketToClient):
     yaw = JavaByte()
     pitch = JavaByte()
 
+    CREEPER = 50
+    SKELETON = 51
+    ZOMBIE = 54
+    PIG = 90
+    SHEEP = 91
+    COW = 92
+    CHICKEN = 93
+
 class EntityVelocity(PacketToClient):
     id = 0x1C
     entity_id = JavaInt()
@@ -267,15 +286,19 @@ class TeleportEntity(PacketToClient):
     yaw = JavaByte()
     pitch = JavaByte()
 
-class KillEntity(PacketToClient):
+class DamageEntity(PacketToClient):
+    """Notifies the client of an update to the health state of an entity. The
+    state can be that the entity took damage, that it died or that it's about
+    to explode.
+
+    """
     id = 0x26
     entity_id = JavaInt()
-    # TODO: Figure out what this means. Has the value 3 most of the time.
-    unknown = JavaByte()
+    state = JavaByte()
 
-    def build(self):
-        print repr(self)
-        return super(KillEntity, self).build()
+    DAMAGE = 2
+    DEATH = 3
+    EXPLODING = 4
 
 class AttachEntity(PacketToClient):
     id = 0x27
@@ -321,6 +344,14 @@ class ComplexEntity(PacketToClient, PacketToServer):
     y = JavaShort()
     z = JavaInt()
     data = NamedBinaryTagData()
+
+class Explode(PacketToClient):
+    id = 0x3C
+    x = JavaDouble()
+    y = JavaDouble()
+    z = JavaDouble()
+    unknown = JavaFloat()
+    blocks = Array(JavaInt, BlockOffset)
 
 class Disconnect(PacketToClient, PacketToServer):
     id = 0xFF

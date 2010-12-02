@@ -18,8 +18,8 @@ from autoproto.marshal.java import *
 __author__ = 'andreas@blixt.org (Andreas Blixt)'
 
 __all__ = [
-    'Item', 'ItemList', 'NamedBinaryTagData', 'RelativeBlockChange',
-    'RelativeBlockChangeList', 'ZlibData']
+    'BlockOffset', 'Item', 'ItemList', 'NamedBinaryTagData',
+    'RelativeBlockChange', 'RelativeBlockChangeList', 'ZlibData']
 
 def _struct_repr(struct):
     kw = []
@@ -28,6 +28,19 @@ def _struct_repr(struct):
 
     cls = struct.__class__
     return '%s.%s(%s)' % (cls.__module__, cls.__name__, ', '.join(kw))
+
+class BlockOffset(Marshaler):
+    """A tuple of X, Y, Z offsets. The offsets are whole numbers (bytes) since
+    they're intended for blocks.
+
+    """
+    @classmethod
+    def bytes_from(cls, value):
+        return ''.join(JavaByte.bytes_from(v) for v in value)
+
+    @classmethod
+    def read_bytes(cls, reader):
+        return tuple(JavaByte.read_bytes(reader) for i in xrange(3))
 
 class Item(object):
     __slots__ = ['id', 'count', 'health']
@@ -121,9 +134,9 @@ class RelativeBlockChangeList(Marshaler):
     @classmethod
     def read_bytes(cls, reader):
         length = JavaShort.read_bytes(reader)
-        coords = Array.read_bytes(reader, JavaShort, length)
-        types = Array.read_bytes(reader, JavaByte, length)
-        meta = Array.read_bytes(reader, JavaByte, length)
+        coords = Array.read_bytes(reader, length, JavaShort)
+        types = Array.read_bytes(reader, length, JavaByte)
+        meta = Array.read_bytes(reader, length, JavaByte)
 
         value = []
         for i in xrange(length):

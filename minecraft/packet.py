@@ -33,8 +33,8 @@ class KeepAlive(PacketToClient, PacketToServer):
 class LoggedIn(PacketToClient):
     id = 0x01
     player_id = JavaInt()
-    unknown_1 = JavaString()
-    unknown_2 = JavaString()
+    unused_1 = JavaString(default='')
+    unused_2 = JavaString(default='')
     map_seed = JavaLong()
     dimension = JavaByte()
 
@@ -43,8 +43,8 @@ class LogIn(PacketToServer):
     protocol_version = JavaInt()
     username = JavaString()
     password = JavaString()
-    map_seed = JavaLong()
-    dimension = JavaByte()
+    unused_1 = JavaLong(default=0)
+    unused_2 = JavaByte(default=0)
 
 class HandshakeResponse(PacketToClient):
     id = 0x02
@@ -65,7 +65,6 @@ class SetTime(PacketToClient):
 class PlayerInventory(PacketToClient, PacketToServer):
     id = 0x05
     type = JavaInt()
-    count = JavaShort()
     items = ItemList()
 
     MAIN = -1

@@ -58,6 +58,7 @@ class ItemList(Marshaler):
     def bytes_from(cls, value):
         pieces = []
 
+        pieces.append(JavaShort.bytes_from(len(value)))
         for item in value:
             if item:
                 pieces.append(JavaShort.bytes_from(item.id))
@@ -69,7 +70,9 @@ class ItemList(Marshaler):
         return ''.join(pieces)
 
     @classmethod
-    def read_bytes(cls, reader, count):
+    def read_bytes(cls, reader):
+        count = JavaShort.read_bytes(reader)
+
         items = []
         for i in xrange(count):
             item_id = JavaShort.read_bytes(reader)
@@ -80,11 +83,6 @@ class ItemList(Marshaler):
             else:
                 items.append(None)
         return items
-
-    def read_value(self, packet, reader):
-        # XXX: Right now depends on the packet to have a "count" attribute that
-        #      has already been read.
-        return self.read_bytes(reader, packet.count)
 
 class NamedBinaryTagData(Marshaler):
     @classmethod

@@ -19,13 +19,13 @@ __all__ = [
     'AddItem', 'AllocateChunk', 'Animate', 'AttachEntity', 'BlockChange',
     'ChatMessage', 'ChunkData', 'CollectItem', 'ComplexEntity',
     'CreateVehicle', 'DamageEntity', 'DestroyEntity', 'Dig', 'Disconnect',
-    'DropItem', 'Entity', 'EntityVelocity', 'Explode', 'Handshake',
-    'HandshakeResponse', 'KeepAlive', 'LogIn', 'LoggedIn', 'Look', 'Move',
-    'MoveAndLook', 'MoveAndLookCorrection', 'MoveAndPointEntity', 'MoveEntity',
+    'Entity', 'EntityVelocity', 'Explode', 'Handshake', 'HandshakeResponse',
+    'KeepAlive', 'LogIn', 'LoggedIn', 'Look', 'Move', 'MoveAndLook',
+    'MoveAndLookCorrection', 'MoveAndPointEntity', 'MoveEntity',
     'MultiBlockChange', 'PlayerInventory', 'PlayerState', 'PointEntity',
     'RelativeBlockChange', 'RelativeBlockChangeList', 'Respawn', 'SetHealth',
-    'SetHeldItem', 'SetTime', 'SpawnMob', 'SpawnNamedEntity', 'SpawnPosition',
-    'TeleportEntity', 'UseEntity', 'UseItem']
+    'SetHeldItem', 'SetTime', 'SpawnItem', 'SpawnMob', 'SpawnNamedEntity',
+    'SpawnPosition', 'TeleportEntity', 'UseEntity', 'UseItem']
 
 class KeepAlive(PacketToClient, PacketToServer):
     id = 0x00
@@ -191,7 +191,7 @@ class SpawnNamedEntity(PacketToClient):
     pitch = JavaByte()
     item_id = JavaShort()
 
-class DropItem(PacketToClient, PacketToServer):
+class SpawnItem(PacketToClient, PacketToServer):
     id = 0x15
     entity_id = JavaInt()
     item_id = JavaShort()

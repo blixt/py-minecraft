@@ -24,7 +24,7 @@ __all__ = [
     'MoveAndLookCorrection', 'MoveAndPointEntity', 'MoveEntity',
     'MultiBlockChange', 'PlayerInventory', 'PlayerState', 'PointEntity',
     'RelativeBlockChange', 'RelativeBlockChangeList', 'Respawn', 'SetHealth',
-    'SetHeldItem', 'SetTime', 'SpawnItem', 'SpawnMob', 'SpawnNamedEntity',
+    'SetHeldItem', 'SetTime', 'SpawnItem', 'SpawnMob', 'SpawnPlayer',
     'SpawnPosition', 'TeleportEntity', 'UseEntity', 'UseItem']
 
 class KeepAlive(PacketToClient, PacketToServer):
@@ -180,7 +180,7 @@ class Animate(PacketToClient, PacketToServer):
     CROUCH = 104
     STAND = 105
 
-class SpawnNamedEntity(PacketToClient):
+class SpawnPlayer(PacketToClient):
     id = 0x14
     entity_id = JavaInt()
     username = JavaString()

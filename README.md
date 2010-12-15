@@ -24,6 +24,19 @@ This will start a wrapper on port 25564 that you can connect to by entering
 The wrapper expects a Minecraft server to already be running locally on port
 25565.
 
+### Minecraft server
+
+A very simple (read: bad, slow, incomplete) implementation of a server. This is
+in no way meant to actually be used, it's more a proof of concept and a test to
+make sure all packet implementations work fine.
+
+Currently the server doesn't support interaction between players other than
+chatting.
+
+Run this in the top directory to start the server:
+
+    python -m example.server.main
+
 ## MIT license
 
 This project is licensed under an MIT license.  

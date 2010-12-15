@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import asyncore
 import math
 import socket
@@ -7,15 +9,34 @@ import autoproto.packet
 from minecraft.marshal import *
 from minecraft.packet import *
 
+class Vector:
+    """A 3D vector.
+
+    """
+    __slots__ = ['x', 'y', 'z']
+
+    def __init__(self, x=0.0, y=0.0, z=0.0):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def set(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
 class Entity(object):
+    """An entity in the world. Entities are objects that can move around freely
+    in the world.
+
+    """
     id_counter = 0
 
     def __init__(self):
         Entity.id_counter += 1
         self.id = Entity.id_counter
-        self.x = 128.0
-        self.y = 80.0
-        self.z = 128.0
+        self.pos = Vector(128.0, 80.0, 128.0)
+        self.vel = Vector()
         self.yaw = 0.0
         self.pitch = 0.0
 
@@ -48,7 +69,7 @@ class MinecraftServer(asyncore.dispatcher):
         if client.username in self.clients:
             raise NameInUseError('Username is already in use.')
 
-        self.message('%s joined the game' % client.username)
+        self.message(u'§e%s joined the game' % client.username)
 
         self.clients[client.username] = client
 
@@ -74,7 +95,7 @@ class MinecraftServer(asyncore.dispatcher):
         if client.entity:
             self.remove_entity(client.entity)
         del self.clients[client.username]
-        self.message('%s left the game' % client.username)
+        self.message(u'§e%s left the game' % client.username)
 
 class ClientHandler(asyncore.dispatcher):
     def __init__(self, socket, server):
@@ -120,7 +141,6 @@ class ClientHandler(asyncore.dispatcher):
             yield None
 
         login = self.get_packet(LogIn)
-        if not login: yield None
         if login.protocol_version != 6:
             yield Disconnect(reason='Unsupported client version.')
             return
@@ -140,11 +160,12 @@ class ClientHandler(asyncore.dispatcher):
                 yield AllocateChunk(x=x, z=z, allocate=True)
 
         yield MoveAndLookCorrection(
-            x=entity.x, y=entity.y, z=entity.z, stance=entity.y + 1.62,
-            yaw=entity.yaw, pitch=entity.pitch, on_ground=False)
+            x=entity.pos.x, y=entity.pos.y, z=entity.pos.z,
+            stance=entity.pos.y + 1.62, yaw=entity.yaw, pitch=entity.pitch,
+            on_ground=False)
 
         # Give the player a golden pickaxe.
-        yield PlayerInventory(type=-1, items=[Item(285, 1, 32)] + [None] * 35)
+        yield PlayerInventory(type=-1, items=[Item(285, 1, 0)] + [None] * 35)
         yield PlayerInventory(type=-2, items=[None] * 4)
         yield PlayerInventory(type=-3, items=[None] * 4)
 
@@ -153,6 +174,8 @@ class ClientHandler(asyncore.dispatcher):
 
         yield SetHealth(health=20)
 
+        # 64 blocks of gold, then 64 blocks of air, plus metadata and light
+        # data, in a 16x128x16 area.
         data = ('\x29' * 64 + '\x00' * 64) * 256 + '\x00' * 16384 + \
                 '\xff' * 32768
         chunks = []
@@ -162,18 +185,22 @@ class ClientHandler(asyncore.dispatcher):
                     x=x * 16, y=0, z=z * 16, ubound_x=15, ubound_y=127,
                     ubound_z=15, data=data))
         # Send chunks back in order of distance.
-        chunks.sort(key=lambda c: math.sqrt((entity.x - c.x - 8) ** 2 +
-                                            (entity.y - c.y - 8) ** 2))
+        chunks.sort(key=lambda c: math.sqrt((entity.pos.x - c.x - 8) ** 2 +
+                                            (entity.pos.y - c.y - 8) ** 2))
 
         # Add ChunkData to a deferred queue, so client input can be processed
         # while chunk data is being sent.
         self.deferred += chunks
 
-        yield MoveAndLookCorrection(
-            x=entity.x, y=entity.y, z=entity.z, stance=entity.y + 1.62,
-            yaw=entity.yaw, pitch=entity.pitch, on_ground=False)
+        # Remove unused variables.
+        del chunks, data
 
-        yield ChatMessage(message='Welcome to Example Server!')
+        yield MoveAndLookCorrection(
+            x=entity.pos.x, y=entity.pos.y, z=entity.pos.z,
+            stance=entity.pos.y + 1.62, yaw=entity.yaw, pitch=entity.pitch,
+            on_ground=False)
+
+        yield ChatMessage(message=u'§eWelcome to Example Server!')
 
         while True:
             while not self.incoming:
@@ -194,9 +221,7 @@ class ClientHandler(asyncore.dispatcher):
 
             # Handle packets.
             if isinstance(packet, (Move, MoveAndLook)):
-                entity.x = packet.x
-                entity.y = packet.y
-                entity.z = packet.z
+                entity.pos.set(packet.x, packet.y, packet.z)
                 entity.stance = packet.stance
             if isinstance(packet, (Look, MoveAndLook)):
                 entity.yaw = packet.yaw
@@ -205,7 +230,9 @@ class ClientHandler(asyncore.dispatcher):
                 self.server.message('<%s> %s' % (self.username, packet.message))
             if isinstance(packet, Disconnect):
                 print self.username, 'disconnecting:', packet.reason
-                self.handle_close()
+                break
+
+        self.handle_close()
 
     def handle_close(self):
         if self.entity:

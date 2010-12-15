@@ -169,7 +169,7 @@ class AddItem(PacketToClient):
     id = 0x11
     item_id = JavaShort()
     count = JavaByte()
-    health = JavaShort()
+    uses = JavaShort()
 
 class Animate(PacketToClient, PacketToServer):
     id = 0x12

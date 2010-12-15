@@ -43,12 +43,12 @@ class BlockOffset(Marshaler):
         return tuple(JavaByte.read_bytes(reader) for i in xrange(3))
 
 class Item(object):
-    __slots__ = ['id', 'count', 'health']
+    __slots__ = ['id', 'count', 'uses']
     
-    def __init__(self, id, count, health):
+    def __init__(self, id, count, uses):
         self.id = id
         self.count = count
-        self.health = health
+        self.uses = uses
 
     def __repr__(self):
         return _struct_repr(self)
@@ -63,7 +63,7 @@ class ItemList(Marshaler):
             if item:
                 pieces.append(JavaShort.bytes_from(item.id))
                 pieces.append(JavaByte.bytes_from(item.count))
-                pieces.append(JavaShort.bytes_from(item.health))
+                pieces.append(JavaShort.bytes_from(item.uses))
             else:
                 pieces.append(JavaShort.bytes_from(-1))
 
@@ -78,8 +78,8 @@ class ItemList(Marshaler):
             item_id = JavaShort.read_bytes(reader)
             if item_id != -1:
                 count = JavaByte.read_bytes(reader)
-                health = JavaShort.read_bytes(reader)
-                items.append(Item(item_id, count, health))
+                uses = JavaShort.read_bytes(reader)
+                items.append(Item(item_id, count, uses))
             else:
                 items.append(None)
         return items

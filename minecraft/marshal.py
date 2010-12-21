@@ -42,59 +42,36 @@ class BlockOffset(Marshaler):
         return tuple(JavaByte.read_bytes(reader) for i in xrange(3))
 
 class Item(object):
-    __slots__ = ['id', 'count', 'uses']
+    __slots__ = ['id', 'count', 'damage', 'unknown']
     
-    def __init__(self, id, count, uses):
+    def __init__(self, id, count, damage, unknown=0):
         self.id = id
         self.count = count
-        self.uses = uses
+        self.damage = damage
+        self.unknown = unknown
 
     def __repr__(self):
         return _struct_repr(self)
 
-class ItemList(Marshaler):
+class ItemData(Marshaler):
     @classmethod
     def bytes_from(cls, value):
-        pieces = []
-
-        pieces.append(JavaShort.bytes_from(len(value)))
-        for item in value:
-            if item:
-                pieces.append(JavaShort.bytes_from(item.id))
-                pieces.append(JavaByte.bytes_from(item.count))
-                pieces.append(JavaShort.bytes_from(item.uses))
-            else:
-                pieces.append(JavaShort.bytes_from(-1))
-
-        return ''.join(pieces)
+        if value:
+            return JavaShort.bytes_from(value.id) + \
+                   JavaByte.bytes_from(value.count) + \
+                   JavaByte.bytes_from(value.damage)
+        else:
+            return JavaShort.bytes_from(-1)
 
     @classmethod
     def read_bytes(cls, reader):
-        count = JavaShort.read_bytes(reader)
-
-        items = []
-        for i in xrange(count):
-            item_id = JavaShort.read_bytes(reader)
-            if item_id != -1:
-                count = JavaByte.read_bytes(reader)
-                uses = JavaShort.read_bytes(reader)
-                items.append(Item(item_id, count, uses))
-            else:
-                items.append(None)
-        return items
-
-class NamedBinaryTagData(Marshaler):
-    @classmethod
-    def bytes_from(cls, value):
-        return ZlibData.bytes_from(value, length_type=JavaShort, use_gzip=True)
-
-    @classmethod
-    def read_bytes(cls, reader):
-        data = ZlibData.read_bytes(reader, length_type=JavaShort,
-            use_gzip=True)
-        # TODO: Implement named binary tag format.
-        #       http://www.minecraft.net/docs/NBT.txt
-        return data
+        id = JavaShort.read_bytes(reader)
+        if id >= 0:
+            count = JavaByte.read_bytes(reader)
+            damage = JavaByte.read_bytes(reader)
+            return Item(id, count, damage)
+        else:
+            return None
 
 class RelativeBlockChange(object):
     __slots__ = ['x', 'y', 'z', 'type', 'meta']
@@ -141,6 +118,28 @@ class RelativeBlockChangeList(Marshaler):
             x, z, y = (s >> 12, s >> 8 & 0xF, s & 0xFF)
             value.append(RelativeBlockChange(x, y, z, types[i], meta[i]))
         return value
+
+class WindowItemData(Marshaler):
+    @classmethod
+    def bytes_from(cls, value):
+        if value:
+            return JavaShort.bytes_from(value.id) + \
+                   JavaShort.bytes_from(value.count << 8 | value.unknown) + \
+                   JavaByte.bytes_from(value.damage)
+        else:
+            return JavaShort.bytes_from(-1)
+
+    @classmethod
+    def read_bytes(cls, reader):
+        id = JavaShort.read_bytes(reader)
+        if id >= 0:
+            pair = JavaShort.read_bytes(reader)
+            count = pair >> 8
+            unknown = pair & 0xFF
+            damage = JavaByte.read_bytes(reader)
+            return Item(id, count, damage, unknown)
+        else:
+            return None
 
 class ZlibData(Marshaler):
     def __init__(self, length_type=JavaInt, use_gzip=False, **kwargs):

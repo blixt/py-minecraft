@@ -53,14 +53,12 @@ class SetTime(PacketToClient):
     id = 0x04
     time = JavaLong()
 
-class PlayerInventory(PacketToClient, PacketToServer):
+class Unknown(PacketToClient, PacketToServer):
+    """Was previously the PlayerInventory packet."""
     id = 0x05
-    type = JavaInt()
-    items = ItemList()
-
-    MAIN = -1
-    EQUIPPED = -2
-    CRAFTING = -3
+    unknown_1 = JavaInt()
+    unknown_2 = JavaShort()
+    unknown_3 = JavaShort()
 
 class SpawnPosition(PacketToClient):
     id = 0x06
@@ -81,7 +79,7 @@ class UseEntity(PacketToServer):
 
 class SetHealth(PacketToClient):
     id = 0x08
-    health = JavaByte()
+    health = JavaShort()
 
 class Respawn(PacketToClient, PacketToServer):
     id = 0x09
@@ -145,22 +143,21 @@ class UseItem(PacketToServer):
 
     """
     id = 0x0F
-    item_id = JavaShort()
     x = JavaInt()
     y = JavaByte()
     z = JavaInt()
     face = JavaByte()
+    item = ItemData()
 
 class SetHeldItem(PacketToClient, PacketToServer):
     id = 0x10
-    entity_id = JavaInt()
-    item_id = JavaShort()
+    slot = JavaShort()
 
 class AddItem(PacketToClient):
     id = 0x11
     item_id = JavaShort()
     count = JavaByte()
-    uses = JavaShort()
+    damage = JavaShort()
 
 class Animate(PacketToClient, PacketToServer):
     id = 0x12
@@ -328,13 +325,6 @@ class BlockChange(PacketToClient):
     type = JavaByte()
     meta = JavaByte()
 
-class ComplexEntity(PacketToClient, PacketToServer):
-    id = 0x3B
-    x = JavaInt()
-    y = JavaShort()
-    z = JavaInt()
-    data = NamedBinaryTagData()
-
 class Explode(PacketToClient):
     id = 0x3C
     x = JavaDouble()
@@ -342,6 +332,67 @@ class Explode(PacketToClient):
     z = JavaDouble()
     unknown = JavaFloat()
     blocks = Array(JavaInt, BlockOffset)
+
+class InitializeWindow(PacketToClient):
+    id = 0x64
+    window = JavaByte()
+    type = JavaByte()
+    title = JavaString()
+    slot_count = JavaByte()
+
+    # Window types.
+    CHEST = 0
+    WORKBENCH = 1
+    FURNACE = 2
+
+class CloseWindow(PacketToServer):
+    id = 0x65
+    window = JavaByte()
+
+class RequestSetSlot(PacketToServer):
+    id = 0x66
+    window = JavaByte()
+    slot = JavaShort()
+    unknown = JavaByte() # related to right-click or splitting stacks
+    transaction = JavaShort()
+    item = ItemData()
+
+    # Slot value for dropping items.
+    DROP_ITEM_SLOT = -999
+
+class SetSlot(PacketToClient):
+    id = 0x67
+    window = JavaByte()
+    slot = JavaShort()
+    item = ItemData()
+
+    # Constant window ids.
+    UNKNOWN = -1 # Sent when initializing a window for unknown reason.
+    INVENTORY = 0
+
+class WindowItems(PacketToClient):
+    id = 0x68
+    window = JavaByte()
+    items = Array(JavaShort, WindowItemData)
+
+class SetProgressBar(PacketToClient):
+    id = 0x69
+    window = JavaByte()
+    bar = JavaShort()
+    progress = JavaShort()
+
+class Transaction(PacketToClient):
+    id = 0x6A
+    window = JavaByte()
+    transaction = JavaShort()
+    accepted = JavaBool() # Not completely verified.
+
+class SpawnSign(PacketToClient):
+    id = 0x82
+    x = JavaInt()
+    y = JavaShort()
+    z = JavaInt()
+    lines = Array(4, JavaString)
 
 class Disconnect(PacketToClient, PacketToServer):
     id = 0xFF

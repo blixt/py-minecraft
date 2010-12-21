@@ -153,12 +153,6 @@ class SetHeldItem(PacketToClient, PacketToServer):
     id = 0x10
     slot = JavaShort()
 
-class AddItem(PacketToClient):
-    id = 0x11
-    item_id = JavaShort()
-    count = JavaByte()
-    damage = JavaShort()
-
 class Animate(PacketToClient, PacketToServer):
     id = 0x12
     entity_id = JavaInt()

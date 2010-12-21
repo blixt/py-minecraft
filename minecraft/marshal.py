@@ -17,10 +17,6 @@ from autoproto.marshal.java import *
 
 __author__ = 'andreas@blixt.org (Andreas Blixt)'
 
-__all__ = [
-    'BlockOffset', 'Item', 'ItemList', 'NamedBinaryTagData',
-    'RelativeBlockChange', 'RelativeBlockChangeList', 'ZlibData']
-
 def _struct_repr(struct):
     kw = []
     for name in struct.__slots__:
@@ -28,6 +24,9 @@ def _struct_repr(struct):
 
     cls = struct.__class__
     return '%s.%s(%s)' % (cls.__module__, cls.__name__, ', '.join(kw))
+
+__locals = set(locals())
+__locals.add('__locals')
 
 class BlockOffset(Marshaler):
     """A tuple of X, Y, Z offsets. The offsets are whole numbers (bytes) since
@@ -177,3 +176,5 @@ class ZlibData(Marshaler):
 
     def read_value(self, packet, reader):
         return self.read_bytes(reader, self.length_type, self.gzip)
+
+__all__ = list(set(locals()) - __locals)

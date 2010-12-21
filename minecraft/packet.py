@@ -15,17 +15,8 @@ Packet.id_type = JavaUByte
 
 __author__ = 'andreas@blixt.org (Andreas Blixt)'
 
-__all__ = [
-    'AddItem', 'AllocateChunk', 'Animate', 'AttachEntity', 'BlockChange',
-    'ChatMessage', 'ChunkData', 'CollectItem', 'ComplexEntity',
-    'CreateVehicle', 'DamageEntity', 'DestroyEntity', 'Dig', 'Disconnect',
-    'Entity', 'EntityVelocity', 'Explode', 'Handshake', 'HandshakeResponse',
-    'KeepAlive', 'LogIn', 'LoggedIn', 'Look', 'Move', 'MoveAndLook',
-    'MoveAndLookCorrection', 'MoveAndPointEntity', 'MoveEntity',
-    'MultiBlockChange', 'PlayerInventory', 'PlayerState', 'PointEntity',
-    'RelativeBlockChange', 'RelativeBlockChangeList', 'Respawn', 'SetHealth',
-    'SetHeldItem', 'SetTime', 'SpawnItem', 'SpawnMob', 'SpawnPlayer',
-    'SpawnPosition', 'TeleportEntity', 'UseEntity', 'UseItem']
+__locals = set(locals())
+__locals.add('__locals')
 
 class KeepAlive(PacketToClient, PacketToServer):
     id = 0x00
@@ -355,3 +346,5 @@ class Explode(PacketToClient):
 class Disconnect(PacketToClient, PacketToServer):
     id = 0xFF
     reason = JavaString()
+
+__all__ = list(set(locals()) - __locals)

@@ -25,8 +25,9 @@ class Marshaler(object):
     __metaclass__ = MarshalerInitializer
     _counter = 0
 
-    def __init__(self, default=None):
-        self.default = default
+    def __init__(self, **kwargs):
+        if 'default' in kwargs:
+            self.default = kwargs['default']
 
         # Keep track of the order that Marshaler instances are created so that
         # the field order can be known by packets.
@@ -34,10 +35,13 @@ class Marshaler(object):
         Marshaler._counter += 1
 
     def __get__(self, instance, owner):
-        return getattr(instance, '_' + self.name, self.default)
+        if hasattr(self, 'default'):
+            return getattr(instance, '_v_' + self.name, self.default)
+        else:
+            return getattr(instance, '_v_' + self.name)
 
     def __set__(self, instance, value):
-        setattr(instance, '_' + self.name, value)
+        setattr(instance, '_v_' + self.name, value)
 
     def _set_up(self, name):
         self.name = name
@@ -76,7 +80,7 @@ class Marshaler(object):
         Marshaler. Default values do not count.
 
         """
-        return hasattr(packet, '_' + self.name)
+        return hasattr(packet, '_v_' + self.name)
 
     def read(self, packet, reader):
         """Reads the value from the specified PacketReader and sets the
@@ -100,9 +104,6 @@ class Marshaler(object):
 
         """
         value = self.__get__(packet, packet.__class__)
-        if value is None:
-            raise ValueError(
-                'Missing value for %s and no default specified' % self.name)
         return value
 
 class Array(Marshaler):

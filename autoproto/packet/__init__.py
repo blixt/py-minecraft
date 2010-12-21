@@ -205,8 +205,10 @@ class PacketReader(object):
                         data = self.buffer[mark:]
                         # Raise error.
                         raise NotImplementedError(
-                            'Encountered unimplemented packet %r [%s]' % (
-                                packet_id, binascii.hexlify(data)))
+                            'Encountered unimplemented packet %r [%s] Last '
+                            'packet was: %r' % (
+                                packet_id, binascii.hexlify(data),
+                                self._last_packet))
                     self._packet = self._map[packet_id](self.direction)
                 packet = self._packet
 
@@ -227,6 +229,7 @@ class PacketReader(object):
                 # All data was available, which means the packet has been read.
                 # If True, packet has been completely read.
                 packets.append(packet)
+                self._last_packet = self._packet
                 self._packet = None
 
         # Remove all data that was consumed from the buffer.

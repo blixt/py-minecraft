@@ -141,7 +141,7 @@ class ClientHandler(asyncore.dispatcher):
             yield None
 
         login = self.get_packet(LogIn)
-        if login.protocol_version != 6:
+        if login.protocol_version != 7:
             yield Disconnect(reason='Unsupported client version.')
             return
 
@@ -165,9 +165,11 @@ class ClientHandler(asyncore.dispatcher):
             on_ground=False)
 
         # Give the player a golden pickaxe.
-        yield PlayerInventory(type=-1, items=[Item(285, 1, 0)] + [None] * 35)
-        yield PlayerInventory(type=-2, items=[None] * 4)
-        yield PlayerInventory(type=-3, items=[None] * 4)
+        pickaxe = Item(285, 1, 0)
+        yield WindowItems(
+            window=0,
+            items=[None] * 36 + [pickaxe] + [None] * 8)
+        yield SetSlot(window=0, slot=36, item=pickaxe)
 
         yield SetTime(time=725037)
         yield KeepAlive()

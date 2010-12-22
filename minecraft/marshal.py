@@ -42,13 +42,12 @@ class BlockOffset(Marshaler):
         return tuple(JavaByte.read_bytes(reader) for i in xrange(3))
 
 class Item(object):
-    __slots__ = ['id', 'count', 'damage', 'unknown']
+    __slots__ = ['id', 'count', 'damage']
     
-    def __init__(self, id, count, damage, unknown=0):
+    def __init__(self, id, count, damage):
         self.id = id
         self.count = count
         self.damage = damage
-        self.unknown = unknown
 
     def __repr__(self):
         return _struct_repr(self)
@@ -124,8 +123,8 @@ class WindowItemData(Marshaler):
     def bytes_from(cls, value):
         if value:
             return JavaShort.bytes_from(value.id) + \
-                   JavaShort.bytes_from(value.count << 8 | value.unknown) + \
-                   JavaByte.bytes_from(value.damage)
+                   JavaByte.bytes_from(value.count) + \
+                   JavaShort.bytes_from(value.damage)
         else:
             return JavaShort.bytes_from(-1)
 
@@ -133,11 +132,9 @@ class WindowItemData(Marshaler):
     def read_bytes(cls, reader):
         id = JavaShort.read_bytes(reader)
         if id >= 0:
-            pair = JavaShort.read_bytes(reader)
-            count = pair >> 8
-            unknown = pair & 0xFF
-            damage = JavaByte.read_bytes(reader)
-            return Item(id, count, damage, unknown)
+            count = JavaByte.read_bytes(reader)
+            damage = JavaShort.read_bytes(reader)
+            return Item(id, count, damage)
         else:
             return None
 

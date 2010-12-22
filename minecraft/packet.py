@@ -381,7 +381,7 @@ class Transaction(PacketToClient):
     transaction = JavaShort()
     accepted = JavaBool() # Not completely verified.
 
-class SpawnSign(PacketToClient):
+class SpawnSign(PacketToClient, PacketToServer):
     id = 0x82
     x = JavaInt()
     y = JavaShort()

@@ -53,12 +53,11 @@ class SetTime(PacketToClient):
     id = 0x04
     time = JavaLong()
 
-class Unknown(PacketToClient, PacketToServer):
-    """Was previously the PlayerInventory packet."""
+class EntityEquipment(PacketToClient):
     id = 0x05
-    unknown_1 = JavaInt()
-    unknown_2 = JavaShort()
-    unknown_3 = JavaShort()
+    entity_id = JavaInt()
+    slot = JavaShort()
+    item_id = JavaShort()
 
 class SpawnPosition(PacketToClient):
     id = 0x06
@@ -215,7 +214,12 @@ class SpawnMob(PacketToClient):
 
     CREEPER = 50
     SKELETON = 51
+    SPIDER = 52
+    GIANT_ZOMBIE = 53
     ZOMBIE = 54
+    SLIME = 55
+    GHAST = 56
+    ZOMBIE_PIGMAN = 57
     PIG = 90
     SHEEP = 91
     COW = 92

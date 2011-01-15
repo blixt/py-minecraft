@@ -58,6 +58,7 @@ class EntityEquipment(PacketToClient):
     entity_id = JavaInt()
     slot = JavaShort()
     item_id = JavaShort()
+    item_damage = JavaShort()
 
 class SpawnPosition(PacketToClient):
     id = 0x06
@@ -157,9 +158,19 @@ class Animate(PacketToClient, PacketToServer):
     entity_id = JavaInt()
     animation = JavaByte()
 
+    IDLE = 0
     SWING = 1
+    DAMAGE = 2
     CROUCH = 104
     STAND = 105
+
+class EntityAction(PacketToClient):
+    id = 0x13
+    entity_id = JavaInt()
+    action = JavaByte()
+
+    CROUCH = 1
+    STAND = 2
 
 class SpawnPlayer(PacketToClient):
     id = 0x14
@@ -177,6 +188,7 @@ class SpawnItem(PacketToClient, PacketToServer):
     entity_id = JavaInt()
     item_id = JavaShort()
     count = JavaByte()
+    damage = JavaShort()
     x = JavaInt()
     y = JavaInt()
     z = JavaInt()
@@ -189,7 +201,7 @@ class CollectItem(PacketToClient):
     entity_id = JavaInt()
     actor_id = JavaInt()
 
-class CreateVehicle(PacketToClient):
+class SpawnEntity(PacketToClient):
     id = 0x17
     entity_id = JavaInt()
     type = JavaByte()
@@ -201,6 +213,13 @@ class CreateVehicle(PacketToClient):
     MINE_CART = 10
     MINE_CART_CHEST = 11
     MINE_CART_FURNACE = 12
+    TNT = 50
+    ARROW = 60
+    SNOWBALL = 61
+    EGG = 62
+    SAND = 70
+    GRAVEL = 71
+    FISHING_BOBBER = 90
 
 class SpawnMob(PacketToClient):
     id = 0x18
@@ -211,6 +230,7 @@ class SpawnMob(PacketToClient):
     z = JavaInt()
     yaw = JavaByte()
     pitch = JavaByte()
+    data = DynamicData()
 
     CREEPER = 50
     SKELETON = 51
@@ -224,6 +244,15 @@ class SpawnMob(PacketToClient):
     SHEEP = 91
     COW = 92
     CHICKEN = 93
+
+class SpawnPainting(PacketToClient):
+    id = 0x19
+    entity_id = JavaInt()
+    title = JavaString()
+    x = JavaInt()
+    y = JavaInt()
+    z = JavaInt()
+    image = JavaInt()
 
 class EntityVelocity(PacketToClient):
     id = 0x1C
@@ -292,6 +321,11 @@ class AttachEntity(PacketToClient):
 
     DETACH = -1
 
+class EntityData(PacketToClient):
+    id = 0x28
+    entity_id = JavaInt()
+    data = DynamicData()
+
 class AllocateChunk(PacketToClient):
     id = 0x32
     x = JavaInt()
@@ -322,6 +356,20 @@ class BlockChange(PacketToClient):
     z = JavaInt()
     type = JavaByte()
     meta = JavaByte()
+
+class PlayNote(PacketToClient):
+    id = 0x36
+    x = JavaInt()
+    y = JavaShort()
+    z = JavaInt()
+    instrument = JavaByte()
+    pitch = JavaByte()
+
+    DOUBLE_BASS = 1
+    SNARE_DRUM = 2
+    CLICKS = 3
+    BASS_DRUM = 4
+    HARP = 5
 
 class Explode(PacketToClient):
     id = 0x3C
@@ -371,7 +419,7 @@ class SetSlot(PacketToClient):
 class WindowItems(PacketToClient):
     id = 0x68
     window = JavaByte()
-    items = Array(JavaShort, WindowItemData)
+    items = Array(JavaShort, ItemData)
 
 class SetProgressBar(PacketToClient):
     id = 0x69

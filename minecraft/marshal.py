@@ -43,7 +43,7 @@ class BlockOffset(Marshaler):
 
 class Item(object):
     __slots__ = ['id', 'count', 'damage']
-    
+
     def __init__(self, id, count, damage):
         self.id = id
         self.count = count
@@ -58,7 +58,7 @@ class ItemData(Marshaler):
         if value:
             return JavaShort.bytes_from(value.id) + \
                    JavaByte.bytes_from(value.count) + \
-                   JavaByte.bytes_from(value.damage)
+                   JavaShort.bytes_from(value.damage)
         else:
             return JavaShort.bytes_from(-1)
 
@@ -67,14 +67,72 @@ class ItemData(Marshaler):
         id = JavaShort.read_bytes(reader)
         if id >= 0:
             count = JavaByte.read_bytes(reader)
-            damage = JavaByte.read_bytes(reader)
+            damage = JavaShort.read_bytes(reader)
             return Item(id, count, damage)
         else:
             return None
 
+class DynamicField(object):
+    __slots__ = ['type', 'unknown', 'value']
+
+    def __init__(self, type, unknown, value):
+        self.type = type
+        self.unknown = unknown
+        self.value = value
+
+    def __repr__(self):
+        return _struct_repr(self)
+
+class DynamicData(Marshaler):
+    @staticmethod
+    def get_marshaler(field_type):
+        if field_type == 0:
+            return JavaByte
+        elif field_type == 1:
+            return JavaShort
+        elif field_type == 2:
+            return JavaInt
+        elif field_type == 3:
+            return JavaFloat
+        elif field_type == 4:
+            return JavaString
+        elif field_type == 5:
+            return ItemData
+        else:
+            raise ValueError('Unexpected DynamicData field type.')
+
+    @classmethod
+    def read_bytes(cls, reader):
+        value = []
+
+        x = JavaByte.read_bytes(reader)
+        while x != 127:
+            field_type = x >> 5
+            unknown = x & 0x1F
+
+            data = DynamicData.get_marshaler(field_type).read_bytes(reader)
+            field = DynamicField(field_type, unknown, data)
+            value.append(field)
+
+            x = JavaByte.read_bytes(reader)
+
+        return value
+
+    @classmethod
+    def bytes_from(cls, value):
+        pieces = []
+
+        for field in value:
+            x = field.type << 5 | field.unknown
+            pieces.append(JavaByte.bytes_from(x))
+            marshaler = DynamicData.get_marshaler(field.type)
+            pieces.append(marshaler.bytes_from(field.value))
+
+        return ''.join(pieces + [JavaByte.bytes_from(127)])
+
 class RelativeBlockChange(object):
     __slots__ = ['x', 'y', 'z', 'type', 'meta']
-    
+
     def __init__(self, x, y, z, type, meta):
         self.x = x
         self.y = y
@@ -117,26 +175,6 @@ class RelativeBlockChangeList(Marshaler):
             x, z, y = (s >> 12, s >> 8 & 0xF, s & 0xFF)
             value.append(RelativeBlockChange(x, y, z, types[i], meta[i]))
         return value
-
-class WindowItemData(Marshaler):
-    @classmethod
-    def bytes_from(cls, value):
-        if value:
-            return JavaShort.bytes_from(value.id) + \
-                   JavaByte.bytes_from(value.count) + \
-                   JavaShort.bytes_from(value.damage)
-        else:
-            return JavaShort.bytes_from(-1)
-
-    @classmethod
-    def read_bytes(cls, reader):
-        id = JavaShort.read_bytes(reader)
-        if id >= 0:
-            count = JavaByte.read_bytes(reader)
-            damage = JavaShort.read_bytes(reader)
-            return Item(id, count, damage)
-        else:
-            return None
 
 class ZlibData(Marshaler):
     def __init__(self, length_type=JavaInt, use_gzip=False, **kwargs):

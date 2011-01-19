@@ -164,7 +164,7 @@ class Animate(PacketToClient, PacketToServer):
     CROUCH = 104
     STAND = 105
 
-class EntityAction(PacketToClient):
+class EntityAction(PacketToClient, PacketToServer):
     id = 0x13
     entity_id = JavaInt()
     action = JavaByte()
@@ -390,6 +390,7 @@ class InitializeWindow(PacketToClient):
     CHEST = 0
     WORKBENCH = 1
     FURNACE = 2
+    TRAP = 3
 
 class CloseWindow(PacketToServer):
     id = 0x65

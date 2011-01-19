@@ -53,7 +53,7 @@ class Mob(BaseEntity):
         return SpawnMob(
             entity_id=self.id, type=self.type, x=int(self.pos.x * 32),
             y=int(self.pos.y * 32), z=int(self.pos.z * 32), yaw=int(self.yaw),
-            pitch=int(self.pitch))
+            pitch=int(self.pitch), data=[DynamicField(0, 0, 0)])
 
 class Player(BaseEntity):
     def __init__(self, position, username, held_item=None):
@@ -168,7 +168,7 @@ class ClientHandler(asyncore.dispatcher):
             yield None
 
         login = self.get_packet(LogIn)
-        if login.protocol_version != 7:
+        if login.protocol_version != 8:
             yield Disconnect(reason='Unsupported client version.')
             return
 

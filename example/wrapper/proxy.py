@@ -36,8 +36,6 @@ class MinecraftProxy(asyncore.dispatcher):
         self.close()
         self.other = None
 
-        print 'Connection closed'
-
     def handle_error(self):
         t, v, tb = sys.exc_info()
         print 'ERROR: %s' % v
@@ -96,7 +94,6 @@ class MinecraftForwarder(asyncore.dispatcher):
     def handle_accept(self):
         client_connection, source_addr = self.accept()
 
-        print 'Client connected', source_addr
         server_connection = socket.socket()
         server_connection.connect(self.forward_to)
 

@@ -6,10 +6,14 @@ from autoproto.packet import TO_CLIENT, TO_SERVER
 from example.wrapper import packet_handler
 from minecraft.packet import *
 
-@packet_handler(ChatMessage, TO_CLIENT)
-def modify_chat(player, packet):
-    """Modifies chat messages to be prefixed with "Name says" in a green
-    color, instead of just "<Name>" in white.
+@packet_handler(Disconnect, TO_CLIENT)
+def player_disconnected(player, packet):
+    print '%s disconnected (%s)' % (player.username, packet.reason)
 
-    """
-    packet.message = re.sub(r'^<([^>]+)>', u'§a\\1 says§f', packet.message)
+@packet_handler(LoggedIn)
+def player_logged_in(player, packet):
+    print '%s logged in' % player.username
+
+@packet_handler(ChatMessage, TO_SERVER)
+def player_sent_message(player, packet):
+    print '<%s> %s' % (player.username, packet.message)

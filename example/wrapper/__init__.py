@@ -26,9 +26,13 @@ def _load_module(module):
     return sys.modules[module]
 
 class MinecraftWrapper(object):
-    def __init__(self):
-        self.forwarder = MinecraftForwarder(('', 25564), ('localhost', 25565),
-            self.handle_packet)
+    def __init__(self, forward_to, bind_to=None):
+        if not bind_to:
+            bind_to = ('', 25565)
+
+        self.forwarder = MinecraftForwarder(
+            bind_to, forward_to, self.handle_packet)
+
         self._players = {}
 
     def handle_packet(self, proxy, packet):
@@ -78,19 +82,18 @@ class MinecraftWrapper(object):
             player.x = packet.x
             player.y = packet.y
             player.z = packet.z
-        elif isinstance(packet, SpawnPosition) or \
-                (isinstance(packet, TeleportEntity) and
-                 packet.entity_id == player.id):
+        elif isinstance(packet, TeleportEntity) and \
+                packet.entity_id == player.id:
             # Player was teleported.
-            player.x = float(packet.x)
-            player.y = float(packet.y)
-            player.z = float(packet.z)
+            player.x = float(packet.x) / 32
+            player.y = float(packet.y) / 32
+            player.z = float(packet.z) / 32
         elif isinstance(packet, (MoveEntity, MoveAndPointEntity)) and \
                 packet.entity_id == player.id:
             # Player moved (relative).
-            player.x += float(packet.x)
-            player.y += float(packet.y)
-            player.z += float(packet.z)
+            player.x += float(packet.x) / 32
+            player.y += float(packet.y) / 32
+            player.z += float(packet.z) / 32
 
         # Send the packet to any handler that has been set up for its type and
         # direction.
@@ -125,6 +128,8 @@ class MinecraftWrapper(object):
                     assert alias not in self._commands, 'Command redefinition'
                     self._commands[alias] = attr
 
+        print 'Loaded %d command(s).' % len(self._commands)
+
     def load_handler_module(self, module):
         """Loads a module containing packet handler functions. If the module
         has already been loaded, it will be reloaded.
@@ -149,6 +154,8 @@ class MinecraftWrapper(object):
                     if key not in self._handlers:
                         self._handlers[key] = []
                     self._handlers[key].append(attr)
+
+        print 'Loaded %d handler(s).' % len(self._handlers)
 
     def reload(self):
         """Reloads the command and packet handler modules.
@@ -202,7 +209,7 @@ def command(*aliases):
             handler._c_aliases += aliases
         else:
             handler._c_aliases = aliases
-        print 'Registered command %s' % '/'.join(aliases)
+        print '  Registered command %s' % '/'.join(aliases)
         return handler
     return decorator
 
@@ -233,7 +240,7 @@ def packet_handler(packet_type, directions=0):
             handler._p_handler_keys += keys
         else:
             handler._p_handler_keys = keys
-        print 'Registered packet handler %s (for %s)' % (
+        print '  Registered packet handler %s (for %s)' % (
             handler.__name__, packet_type.__name__)
         return handler
     return decorator

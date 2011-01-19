@@ -3,6 +3,7 @@
 import asyncore
 import math
 import socket
+import time
 
 import autoproto.marshal.java
 import autoproto.packet
@@ -25,25 +26,47 @@ class Vector:
         self.y = y
         self.z = z
 
-class Entity(object):
+class BaseEntity(object):
     """An entity in the world. Entities are objects that can move around freely
     in the world.
 
     """
     id_counter = 0
 
-    def __init__(self):
-        Entity.id_counter += 1
-        self.id = Entity.id_counter
-        self.pos = Vector(128.0, 80.0, 128.0)
+    def __init__(self, position):
+        BaseEntity.id_counter += 1
+        self.id = BaseEntity.id_counter
+        self.pos = position
         self.vel = Vector()
         self.yaw = 0.0
         self.pitch = 0.0
 
-class Player(Entity):
-    def __init__(self, username):
-        super(Player, self).__init__()
+    def get_packet(self):
+        raise NotImplemented()
+
+class Mob(BaseEntity):
+    def __init__(self, position, type):
+        super(Mob, self).__init__(position)
+        self.type = type
+
+    def get_packet(self):
+        return SpawnMob(
+            entity_id=self.id, type=self.type, x=int(self.pos.x * 32),
+            y=int(self.pos.y * 32), z=int(self.pos.z * 32), yaw=int(self.yaw),
+            pitch=int(self.pitch))
+
+class Player(BaseEntity):
+    def __init__(self, position, username, held_item=None):
+        super(Player, self).__init__(position)
         self.username = username
+        self.held_item = held_item
+
+    def get_packet(self):
+        return SpawnPlayer(
+            entity_id=self.id, username=self.username, x=int(self.pos.x * 32),
+            y=int(self.pos.y * 32), z=int(self.pos.z * 32),
+            rotation=int(self.yaw), pitch=int(self.pitch),
+            item_id=self.held_item.id if self.held_item else -1)
 
 class Error(Exception):
     pass
@@ -55,7 +78,10 @@ class MinecraftServer(asyncore.dispatcher):
     def __init__(self, host, port):
         self.clients = {}
         self.entities = {}
-        
+
+        zombie = Mob(Vector(128.0, 64.0, 132.0), SpawnMob.ZOMBIE)
+        self.add_entity(zombie)
+
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.bind((host, port))
@@ -73,7 +99,7 @@ class MinecraftServer(asyncore.dispatcher):
 
         self.clients[client.username] = client
 
-        player = Player(client.username)
+        player = Player(Vector(128.0, 80.0, 128.0), client.username)
         self.add_entity(player)
         return player
 
@@ -100,6 +126,7 @@ class MinecraftServer(asyncore.dispatcher):
 class ClientHandler(asyncore.dispatcher):
     def __init__(self, socket, server):
         self.entity = None
+        self.known_entities = []
 
         self.server = server
         self.reader = autoproto.packet.PacketReader(
@@ -155,6 +182,14 @@ class ClientHandler(asyncore.dispatcher):
 
         yield SpawnPosition(x=0, y=64, z=0)
 
+        for e in self.server.entities.values():
+            self.known_entities.append(e)
+            if e == entity:
+                # Skip the player's own entity.
+                continue
+            yield e.get_packet()
+            yield Entity(entity_id=e.id)
+
         for x in xrange(20):
             for z in xrange(20):
                 yield AllocateChunk(x=x, z=z, allocate=True)
@@ -164,12 +199,22 @@ class ClientHandler(asyncore.dispatcher):
             stance=entity.pos.y + 1.62, yaw=entity.yaw, pitch=entity.pitch,
             on_ground=False)
 
-        # Give the player a golden pickaxe.
-        pickaxe = Item(285, 1, 0)
+        # Give the player a golden outfit.
+        pickaxe = Item(283, 1, 0)
+        helm = Item(314, 1, 0)
+        breastplate = Item(315, 1, 0)
+        leggings = Item(316, 1, 0)
+        boots = Item(317, 1, 0)
         yield WindowItems(
             window=0,
-            items=[None] * 36 + [pickaxe] + [None] * 8)
+            items=[None] * 5 + [helm, breastplate, leggings, boots] +
+                  [None] * 27 + [pickaxe] + [None] * 8)
+        yield SetSlot(window=-1, slot=-1, item=None)
         yield SetSlot(window=0, slot=36, item=pickaxe)
+        yield SetSlot(window=0, slot=5, item=helm)
+        yield SetSlot(window=0, slot=6, item=breastplate)
+        yield SetSlot(window=0, slot=7, item=leggings)
+        yield SetSlot(window=0, slot=8, item=boots)
 
         yield SetTime(time=725037)
         yield KeepAlive()
@@ -204,7 +249,25 @@ class ClientHandler(asyncore.dispatcher):
 
         yield ChatMessage(message=u'§eWelcome to Example Server!')
 
+        last_tick = time.time()
         while True:
+            t = time.time()
+            if t - last_tick > 0.5:
+                # Send new entity positions.
+                for e in self.server.entities.values():
+                    if e == entity:
+                        continue
+                    if e not in self.known_entities:
+                        yield e.get_packet()
+                        yield Entity(entity_id=e.id)
+                        self.known_entities.append(e)
+                        continue
+                    yield TeleportEntity(
+                        entity_id=e.id, x=int(e.pos.x * 32),
+                        y=int(e.pos.y * 32), z=int(e.pos.z * 32),
+                        yaw=int(e.yaw), pitch=int(e.pitch))
+                last_tick = t
+
             while not self.incoming:
                 # Waiting for incoming packets.
                 n = 0

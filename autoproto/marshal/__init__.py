@@ -38,7 +38,13 @@ class Marshaler(object):
         if hasattr(self, 'default'):
             return getattr(instance, '_v_' + self.name, self.default)
         else:
-            return getattr(instance, '_v_' + self.name)
+            try:
+                return getattr(instance, '_v_' + self.name)
+            except AttributeError:
+                raise AttributeError('\'%s\' missing value for \'%s\' (%s)' % (
+                    instance.__class__.__name__,
+                    self.name,
+                    self.__class__.__name__))
 
     def __set__(self, instance, value):
         setattr(instance, '_v_' + self.name, value)

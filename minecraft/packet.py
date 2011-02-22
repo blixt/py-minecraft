@@ -244,6 +244,7 @@ class SpawnMob(PacketToClient):
     SHEEP = 91
     COW = 92
     CHICKEN = 93
+    SQUID = 94
 
 class SpawnPainting(PacketToClient):
     id = 0x19

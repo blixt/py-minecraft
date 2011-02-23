@@ -34,14 +34,28 @@ class MinecraftWrapper(object):
             bind_to, forward_to, self.handle_packet)
 
         self._players = {}
+        self._stats = {}
 
     def handle_packet(self, proxy, packet):
+        packet_class = packet.__class__
+
+        # Keep statistics over packet send counts.
+        if packet_class in self._stats:
+            cs, sc = self._stats[packet_class]
+        else:
+            cs, sc = (0, 0)
+
         # Get the client connection for the current packet (even if the packet
         # was sent by the server).
         if packet.direction == autoproto.packet.TO_SERVER:
             client = proxy
+            cs += 1
         else:
             client = proxy.other
+            sc += 1
+
+        # Save stats.
+        self._stats[packet_class] = (cs, sc)
 
         # Set up a Player object for every client.
         if client not in self._players:
@@ -94,10 +108,17 @@ class MinecraftWrapper(object):
             player.x += float(packet.x) / 32
             player.y += float(packet.y) / 32
             player.z += float(packet.z) / 32
+        elif packet_class.__name__.startswith('Unknown'):
+            # The assumption is that any packet that is named "Unknown" needs
+            # to be printed so we can figure out what it is.
+            if packet.direction == autoproto.packet.TO_SERVER:
+                print 'C->S', repr(packet)
+            else:
+                print 'S->C', repr(packet)
 
         # Send the packet to any handler that has been set up for its type and
         # direction.
-        key = (packet.__class__, packet.direction)
+        key = (packet_class, packet.direction)
         if key not in self._handlers:
             return
 
@@ -168,6 +189,12 @@ class MinecraftWrapper(object):
         try:
             asyncore.loop()
         except KeyboardInterrupt:
+            # Print the packet send count statistics.
+            print ''
+            print '%-25s%10s%10s' % ('[Packet]', '[C->S]', '[S->C]')
+            for packet, (cs, sc) in self._stats.items():
+                print '%-25s%10d%10d' % (packet.__name__, cs, sc)
+
             self.forwarder.handle_close()
 
 class Player(object):

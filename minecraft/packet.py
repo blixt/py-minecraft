@@ -153,6 +153,14 @@ class SetHeldItem(PacketToClient, PacketToServer):
     id = 0x10
     slot = JavaShort()
 
+class Unknown1(PacketToClient, PacketToServer):
+    id = 0x11
+    u1 = JavaInt()
+    u2 = JavaByte()
+    u3 = JavaInt()
+    u4 = JavaByte()
+    u5 = JavaInt()
+
 class Animate(PacketToClient, PacketToServer):
     id = 0x12
     entity_id = JavaInt()
@@ -254,6 +262,15 @@ class SpawnPainting(PacketToClient):
     y = JavaInt()
     z = JavaInt()
     image = JavaInt()
+
+class Unknown2(PacketToClient, PacketToServer):
+    id = 0x1B
+    u1 = JavaFloat()
+    u2 = JavaFloat()
+    u3 = JavaFloat()
+    u4 = JavaFloat()
+    u5 = JavaBool()
+    u6 = JavaBool()
 
 class EntityVelocity(PacketToClient):
     id = 0x1C

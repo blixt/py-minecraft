@@ -168,7 +168,7 @@ class ClientHandler(asyncore.dispatcher):
             yield None
 
         login = self.get_packet(LogIn)
-        if login.protocol_version != 8:
+        if login.protocol_version != 9:
             yield Disconnect(reason='Unsupported client version.')
             return
 

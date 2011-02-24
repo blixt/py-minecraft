@@ -149,7 +149,7 @@ class UseItem(PacketToServer):
     face = JavaByte()
     item = ItemData()
 
-class SetHeldItem(PacketToClient, PacketToServer):
+class SetHeldItem(PacketToServer):
     id = 0x10
     slot = JavaShort()
 
@@ -172,7 +172,7 @@ class Animate(PacketToClient, PacketToServer):
     CROUCH = 104
     STAND = 105
 
-class EntityAction(PacketToClient, PacketToServer):
+class EntityAction(PacketToServer):
     id = 0x13
     entity_id = JavaInt()
     action = JavaByte()
@@ -191,7 +191,7 @@ class SpawnPlayer(PacketToClient):
     pitch = JavaByte()
     item_id = JavaShort()
 
-class SpawnItem(PacketToClient, PacketToServer):
+class SpawnItem(PacketToClient):
     id = 0x15
     entity_id = JavaInt()
     item_id = JavaShort()
@@ -446,7 +446,7 @@ class SetProgressBar(PacketToClient):
     bar = JavaShort()
     progress = JavaShort()
 
-class Transaction(PacketToClient, PacketToServer):
+class Transaction(PacketToClient):
     id = 0x6A
     window = JavaByte()
     transaction = JavaShort()

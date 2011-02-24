@@ -9,6 +9,9 @@ BACKUP_PATH = 'wrapper.backup.json'
 
 _data = None
 _defaults = {
+    'server': {
+        'host': 'localhost',
+        'port': 25565},
     'port': 25564,
     'groups': {
         '@default': {

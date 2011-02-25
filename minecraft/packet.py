@@ -446,7 +446,7 @@ class SetProgressBar(PacketToClient):
     bar = JavaShort()
     progress = JavaShort()
 
-class Transaction(PacketToClient):
+class Transaction(PacketToClient, PacketToServer):
     id = 0x6A
     window = JavaByte()
     transaction = JavaShort()

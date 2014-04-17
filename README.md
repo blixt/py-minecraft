@@ -1,4 +1,4 @@
-# pyminecraft
+# py-minecraft
 
 A Python library for communicating with Minecraft clients and servers.
 
